@@ -1,0 +1,57 @@
+---
+# installing tomcat on ubuntu from
+# https://www.digitalocean.com/community/tutorials/how-to-install-apache-tomcat-8-on-ubuntu-16-04
+- hosts: tomcat
+  become: yes
+  tasks:
+  - name: updating apt packages
+    apt:
+      update_cache: yes
+  - name: installing java development kit
+    apt:
+      name: default-jdk
+      state: present
+  - name: creating tomcat home directory
+    file:
+      path: /opt/tomcat
+      state: directory
+      mode: 0755
+  - name: creating tomcat group
+    group:
+      name: tomcat
+      state: present
+  - name: Add the user 'johnd' with a specific uid and a primary group of 'admin'
+    user:
+      name: tomcat
+      comment: My-tomcat creation
+      group: tomcat
+      shell: /bin/false
+      home: /opt/tomcat/ 
+  - name: copying tomcatzip format to nodes
+    copy:
+      src: apache-tomcat-8.5.32.zip
+      dest: /opt/tomcat/
+  - name: installing uzip package on nodes
+    apt:
+      name: unzip
+      state: present
+  - name: unarchive tomcatzip
+    unarchive:
+      src: /opt/tomcat/apache-tomcat-8.5.32.zip
+      dest: /opt/tomcat/
+      remote_src: yes
+  - name: giving tomcat group ownership over the entrire installation directory
+    command: sudo chgrp -R tomcat /opt/tomcat
+  - name: giving read access to the conf directory
+    command: sudo chmod -R 777 apache-tomcat-8.5.32
+    args:
+      chdir: /opt/tomcat/
+  - name: making tomcat user owner of webapps, work,temp,logs directory
+    command: sudo chown -R tomcat webapps/ work/ temp/ logs/
+    args: 
+      chdir: /opt/tomcat/apache-tomcat-8.5.32
+  - name: starting tomcat script
+    command: sh /opt/tomcat/apache-tomcat-8.5.32/bin/startup.sh
+  
+  
+
